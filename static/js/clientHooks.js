@@ -1,6 +1,8 @@
 'use strict';
 // Modified from ep_image_insert 1.0.7 
 
+console.log('ep_images_extended version 1.1.1');
+
 // Optional helper (shared with ep_docx_html_customizer) that provides a CORS fetch with
 // automatic same-origin proxy fallback.  If the plugin is not present we simply fall back
 // to the native fetch logic.
@@ -892,8 +894,8 @@ exports.postAceInit = function (hook, context) {
                 if (isValid) {
                     evt.preventDefault();
 
-                    // Determine storage strategy (default base64)
-                    const storageType = (clientVars && clientVars.ep_images_extended && clientVars.ep_images_extended.storageType) || 'base64';
+                    // Determine storage strategy (default to s3_presigned)
+                    const storageType = (clientVars && clientVars.ep_images_extended && clientVars.ep_images_extended.storageType) || 's3_presigned';
 
                     // Global cache to avoid re-uploading the same blob within a pad session
                     window.epImageInsertUploadCache = window.epImageInsertUploadCache || {};
@@ -964,8 +966,8 @@ exports.postAceInit = function (hook, context) {
                                 probeImg.onerror = () => insertIntoPad(publicUrl);
                                 probeImg.src = publicUrl;
                             } catch (err) {
-                                console.error('[ep_images_extended paste] S3 upload failed, falling back to base64:', err);
-                                insertAsDataUrl(file);
+                                console.error('[ep_images_extended paste] S3 upload failed and base64 is disabled:', err);
+                                $.gritter.add({ title: errorTitle, text: 'Image upload to S3 failed. Base64 is disabled.', sticky: true, class_name: 'error' });
                             }
                         })();
                     } else {
@@ -996,8 +998,8 @@ exports.postAceInit = function (hook, context) {
                                 probeImg.onerror = () => insertIntoPad(publicUrl);
                                 probeImg.src = publicUrl;
                             } catch (err) {
-                                console.error('[ep_images_extended paste] Server upload failed, falling back to base64:', err);
-                                insertAsDataUrl(file);
+                                console.error('[ep_images_extended paste] Server upload failed and base64 is disabled:', err);
+                                $.gritter.add({ title: errorTitle, text: 'Image upload failed. Base64 is disabled.', sticky: true, class_name: 'error' });
                             }
                         })();
                     }

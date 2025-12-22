@@ -22,15 +22,12 @@
       "hooks":{
         "clientVars": "ep_images_extended/index",
         "eejsBlock_body": "ep_images_extended/index",
-        "getLineHTMLForExport": "ep_images_extended/exportHTML",
-        "stylesForExport": "ep_images_extended/exportHTML",
         "expressConfigure": "ep_images_extended/index",
         "eejsBlock_editbarMenuLeft": "ep_images_extended/editbar",
         "loadSettings": "ep_images_extended/settings",
         "collectContentPre": "ep_images_extended/static/js/contentCollection",
         "eejsBlock_styles": "ep_images_extended/index",
-        "eejsBlock_timesliderStyles": "ep_images_extended/index",
-        "ccRegisterBlockElements": "ep_images_extended/index"
+        "eejsBlock_timesliderStyles": "ep_images_extended/index"
       }
     }
   ]

@@ -280,9 +280,4 @@ exports.expressConfigure = (hookName, context) => {
   // ---------------------------------------------------------------------
 };
 
-/**
-* Hook to tell Etherpad that 'img' tags are supported during import.
-*/
-exports.ccRegisterBlockElements = (hookName, context, cb) => {
-  return cb(['img']);
-};
+// Import/export hooks removed - ccRegisterBlockElements was here

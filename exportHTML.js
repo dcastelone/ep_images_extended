@@ -68,7 +68,13 @@ exports.getLineHTMLForExport = async (hook, context) => {
       generatedHTML += htmlSegment;
       currentPos += opChars;
     }
-    context.lineContent = generatedHTML;
+    // Preserve alignment wrapper from ep_align if it ran before us
+    const alignMatch = context.lineContent.match(/^<p style='text-align:([^']+)'>([\s\S]*)<\/p>$/);
+    if (alignMatch) {
+      context.lineContent = `<p style='text-align:${alignMatch[1]}'>${generatedHTML}</p>`;
+    } else {
+      context.lineContent = generatedHTML;
+    }
   } else {
      // Line has no attributes, just escape the text
      context.lineContent = Security.escapeHTML(context.text);

@@ -9,7 +9,7 @@ exports.getLineHTMLForExport = async (hook, context) => {
 
   if (!attribLine) return;
 
-  let imgTag = null;
+  let imgsHTML = '';
   const opIter = Changeset.opIterator(attribLine);
 
   while (opIter.hasNext()) {
@@ -44,21 +44,20 @@ exports.getLineHTMLForExport = async (hook, context) => {
       }
 
       tag += ` style="${styles}">`;
-      imgTag = tag;
-      break;
+      imgsHTML += tag;
     } catch (e) {
       console.error(`[ep_images_extended exportHTML] Error processing image: ${imageSrcAttrib}`, e);
     }
   }
 
-  if (!imgTag) return; // no image found — leave lineContent untouched
+  if (!imgsHTML) return; // no images found — leave lineContent untouched
 
   // Preserve alignment wrapper from ep_align if it ran before us
   const alignMatch = context.lineContent.match(/^<p style='text-align:([^']+)'>([\s\S]*)<\/p>$/);
   if (alignMatch) {
-    context.lineContent = `<p style='text-align:${alignMatch[1]}'>${imgTag}</p>`;
+    context.lineContent = `<p style='text-align:${alignMatch[1]}'>${imgsHTML}</p>`;
   } else {
-    context.lineContent = imgTag;
+    context.lineContent = imgsHTML;
   }
 };
 

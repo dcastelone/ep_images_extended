@@ -27,7 +27,9 @@
         "loadSettings": "ep_images_extended/settings",
         "collectContentPre": "ep_images_extended/static/js/contentCollection",
         "eejsBlock_styles": "ep_images_extended/index",
-        "eejsBlock_timesliderStyles": "ep_images_extended/index"
+        "eejsBlock_timesliderStyles": "ep_images_extended/index",
+        "getLineHTMLForExport": "ep_images_extended/exportHTML",
+        "stylesForExport": "ep_images_extended/exportHTML"
       }
     }
   ]

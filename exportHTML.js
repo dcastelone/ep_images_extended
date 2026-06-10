@@ -7,79 +7,59 @@ exports.getLineHTMLForExport = async (hook, context) => {
   const attribLine = context.attribLine;
   const apool = context.apool;
 
-  if (attribLine) {
-    let generatedHTML = '';
-    let currentPos = 0;
-    const opIter = Changeset.opIterator(attribLine);
+  if (!attribLine) return;
 
-    while (opIter.hasNext()) {
-      const op = opIter.next();
-      const opChars = op.chars;
-      const textSegment = context.text.substring(currentPos, currentPos + opChars);
+  let imgTag = null;
+  const opIter = Changeset.opIterator(attribLine);
 
-      let htmlSegment = Security.escapeHTML(textSegment); // Default: escaped text
+  while (opIter.hasNext()) {
+    const op = opIter.next();
+    const imageSrcAttrib = Changeset.opAttributeValue(op, 'image', apool);
+    if (!imageSrcAttrib) continue;
 
-      // Check for our image attribute
-      const imageSrcAttrib = Changeset.opAttributeValue(op, 'image', apool);
+    try {
+      const decodedSrc = decodeURIComponent(imageSrcAttrib);
+      if (!decodedSrc || (!decodedSrc.startsWith('data:') && !decodedSrc.startsWith('http') && !decodedSrc.startsWith('/'))) {
+        console.warn(`[ep_images_extended exportHTML] Invalid image src: ${decodedSrc}`);
+        continue;
+      }
+
       const imageWidthAttrib = Changeset.opAttributeValue(op, 'image-width', apool);
       const imageHeightAttrib = Changeset.opAttributeValue(op, 'image-height', apool);
       const imageIdAttrib = Changeset.opAttributeValue(op, 'image-id', apool);
-      // const imageAspectRatioAttrib = Changeset.opAttributeValue(op, 'imageCssAspectRatio', apool); // Not directly used for img tag but good to know it exists
 
-      if (imageSrcAttrib) {
-        try {
-          const decodedSrc = decodeURIComponent(imageSrcAttrib);
-          if (decodedSrc && (decodedSrc.startsWith('data:') || decodedSrc.startsWith('http') || decodedSrc.startsWith('/'))) {
-            let imgTag = `<img src="${Security.escapeHTML(decodedSrc)}"`;
+      let tag = `<img src="${Security.escapeHTML(decodedSrc)}"`;
+      let styles = 'display:inline-block; max-width:100%; height:auto;';
 
-            let styles = 'display:inline-block; max-width:100%; height:auto;'; // Default styles
-
-            if (imageWidthAttrib) {
-              const widthValue = imageWidthAttrib.replace(/px$/, '');
-              imgTag += ` width="${Security.escapeHTMLAttribute(widthValue)}"`;
-              styles += ` width:${Security.escapeHTMLAttribute(imageWidthAttrib)};`;
-            }
-            if (imageHeightAttrib) {
-              const heightValue = imageHeightAttrib.replace(/px$/, '');
-              imgTag += ` height="${Security.escapeHTMLAttribute(heightValue)}"`;
-              // If height is set, override height:auto
-              styles = styles.replace('height:auto;', `height:${Security.escapeHTMLAttribute(imageHeightAttrib)};`);
-            }
-
-            if (imageIdAttrib) {
-              imgTag += ` data-image-id="${Security.escapeHTMLAttribute(imageIdAttrib)}"`;
-            }
-
-            imgTag += ` style="${styles}"`;
-            imgTag += `>`;
-            htmlSegment = imgTag;
-          } else {
-             console.warn(`[ep_images_extended exportHTML] Invalid unescaped image src: ${decodedSrc}`);
-             // Keep default htmlSegment (escaped placeholder text) or specific error
-             htmlSegment = '[Invalid Image Src]';
-          }
-        } catch (e) {
-          console.error(`[ep_images_extended exportHTML] Error processing image attribute: ${imageSrcAttrib}`, e);
-          htmlSegment = '[Image Processing Error]';
-        }
+      if (imageWidthAttrib) {
+        tag += ` width="${Security.escapeHTMLAttribute(imageWidthAttrib.replace(/px$/, ''))}"`;
+        styles += ` width:${Security.escapeHTMLAttribute(imageWidthAttrib)};`;
+      }
+      if (imageHeightAttrib) {
+        tag += ` height="${Security.escapeHTMLAttribute(imageHeightAttrib.replace(/px$/, ''))}"`;
+        styles = styles.replace('height:auto;', `height:${Security.escapeHTMLAttribute(imageHeightAttrib)};`);
+      }
+      if (imageIdAttrib) {
+        tag += ` data-image-id="${Security.escapeHTMLAttribute(imageIdAttrib)}"`;
       }
 
-
-      generatedHTML += htmlSegment;
-      currentPos += opChars;
+      tag += ` style="${styles}">`;
+      imgTag = tag;
+      break;
+    } catch (e) {
+      console.error(`[ep_images_extended exportHTML] Error processing image: ${imageSrcAttrib}`, e);
     }
-    // Preserve alignment wrapper from ep_align if it ran before us
-    const alignMatch = context.lineContent.match(/^<p style='text-align:([^']+)'>([\s\S]*)<\/p>$/);
-    if (alignMatch) {
-      context.lineContent = `<p style='text-align:${alignMatch[1]}'>${generatedHTML}</p>`;
-    } else {
-      context.lineContent = generatedHTML;
-    }
-  } else {
-     // Line has no attributes, just escape the text
-     context.lineContent = Security.escapeHTML(context.text);
   }
 
+  if (!imgTag) return; // no image found — leave lineContent untouched
+
+  // Preserve alignment wrapper from ep_align if it ran before us
+  const alignMatch = context.lineContent.match(/^<p style='text-align:([^']+)'>([\s\S]*)<\/p>$/);
+  if (alignMatch) {
+    context.lineContent = `<p style='text-align:${alignMatch[1]}'>${imgTag}</p>`;
+  } else {
+    context.lineContent = imgTag;
+  }
 };
 
 exports.stylesForExport = (hook, padId, cb) => {

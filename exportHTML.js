@@ -24,13 +24,14 @@ exports.getLineHTMLForExport = async (hook, context) => {
       const imageWidthAttrib = Changeset.opAttributeValue(op, 'image-width', apool);
       const imageHeightAttrib = Changeset.opAttributeValue(op, 'image-height', apool);
       const imageIdAttrib = Changeset.opAttributeValue(op, 'image-id', apool);
+      const imageAltAttrib = Changeset.opAttributeValue(op, 'image-alt', apool) || '';
       // const imageAspectRatioAttrib = Changeset.opAttributeValue(op, 'imageCssAspectRatio', apool); // Not directly used for img tag but good to know it exists
 
       if (imageSrcAttrib) {
         try {
           const decodedSrc = decodeURIComponent(imageSrcAttrib);
           if (decodedSrc && (decodedSrc.startsWith('data:') || decodedSrc.startsWith('http') || decodedSrc.startsWith('/'))) {
-            let imgTag = `<img src="${Security.escapeHTML(decodedSrc)}"`;
+            let imgTag = `<img src="${Security.escapeHTML(decodedSrc)}" alt="${Security.escapeHTMLAttribute(imageAltAttrib)}"`;
 
             let styles = 'display:inline-block; max-width:100%; height:auto;'; // Default styles
 

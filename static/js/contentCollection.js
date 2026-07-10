@@ -2,6 +2,7 @@
 // Modified from ep_image_insert 1.0.7 
 // This hook is called **before** the text of a line/segment is processed by the Changeset library.
 const collectContentPre = (hook, context) => {
+  const {decodeAltText} = require('./accessibility');
   const classes = context.cls ? context.cls.split(' ') : [];
   let escapedSrc = null;
   let widthValue = null;
@@ -9,6 +10,7 @@ const collectContentPre = (hook, context) => {
   let aspectRatioValue = null;
   let floatValue = null;
   let imageIdValue = null;
+  let altTextValue = null;
 
   for (const cls of classes) {
       if (cls.startsWith('image:')) {
@@ -38,6 +40,8 @@ const collectContentPre = (hook, context) => {
           if (potentialId && potentialId.length > 10) {
             imageIdValue = potentialId;
           }
+      } else if (cls.startsWith('image-alt-')) {
+          altTextValue = decodeAltText(cls.substring(10));
       }
   }
 
@@ -81,6 +85,13 @@ const collectContentPre = (hook, context) => {
         context.cc.doAttrib(context.state, `image-id::${imageIdValue}`);
     } catch (e) {
         console.error('[ep_images_extended collectContentPre] Error applying image-id attribute:', e);
+    }
+  }
+  if (altTextValue !== null) {
+    try {
+        context.cc.doAttrib(context.state, `image-alt::${altTextValue}`);
+    } catch (e) {
+        console.error('[ep_images_extended collectContentPre] Error applying image-alt attribute:', e);
     }
   }
 };

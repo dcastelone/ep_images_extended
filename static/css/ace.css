@@ -197,6 +197,12 @@ span.inline-image.image-placeholder span.image-resize-handle {
   border-color: #dadce0;
 }
 
+.image-format-button:focus-visible,
+span.inline-image.image-placeholder:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 2px;
+}
+
 .image-format-button.active {
   background: #e8f0fe;
   border-color: #1a73e8;

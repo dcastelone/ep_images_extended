@@ -1,28 +1,31 @@
-<div id="imageFormatMenu" class="image-format-menu">
+<div id="imageFormatMenu" class="image-format-menu" role="toolbar" aria-label="Image options">
     <div class="image-format-menu-section">
         <div class="image-format-menu-buttons">
-            <button class="image-format-button active" data-wrap="inline" title="In line with text">
-                <i class="bi bi-justify"></i>
+            <button class="image-format-button active" data-wrap="inline" title="In line with text" aria-label="In line with text" aria-pressed="true">
+                <i class="bi bi-justify" aria-hidden="true"></i>
             </button>
-            <button class="image-format-button" data-wrap="left" title="Wrap text - Image on left">
-                <i class="bi bi-text-indent-left"></i>
+            <button class="image-format-button" data-wrap="left" title="Wrap text - Image on left" aria-label="Wrap text, image on left" aria-pressed="false">
+                <i class="bi bi-text-indent-left" aria-hidden="true"></i>
             </button>
-            <button class="image-format-button" data-wrap="right" title="Wrap text - Image on right">
-                <i class="bi bi-text-indent-right"></i>
+            <button class="image-format-button" data-wrap="right" title="Wrap text - Image on right" aria-label="Wrap text, image on right" aria-pressed="false">
+                <i class="bi bi-text-indent-right" aria-hidden="true"></i>
             </button>
         </div>
     </div>
     <div class="image-format-menu-divider"></div>
     <div class="image-format-menu-section">
         <div class="image-format-menu-buttons">
-            <button class="image-format-button" data-action="copy" title="Copy image">
-                <i class="bi bi-copy"></i>
+            <button class="image-format-button" data-action="alt" title="Edit alt text" aria-label="Edit alt text">
+                <i class="bi bi-card-text" aria-hidden="true"></i>
             </button>
-            <button class="image-format-button" data-action="cut" title="Cut image">
-                <i class="bi bi-scissors"></i>
+            <button class="image-format-button" data-action="copy" title="Copy image" aria-label="Copy image">
+                <i class="bi bi-copy" aria-hidden="true"></i>
             </button>
-            <button class="image-format-button image-delete-button" data-action="delete" title="Delete image">
-                <i class="bi bi-trash3"></i>
+            <button class="image-format-button" data-action="cut" title="Cut image" aria-label="Cut image">
+                <i class="bi bi-scissors" aria-hidden="true"></i>
+            </button>
+            <button class="image-format-button image-delete-button" data-action="delete" title="Delete image" aria-label="Delete image">
+                <i class="bi bi-trash3" aria-hidden="true"></i>
             </button>
         </div>
     </div>

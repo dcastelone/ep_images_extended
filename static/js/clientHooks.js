@@ -3,6 +3,13 @@
 
 console.log('ep_images_extended version 1.1.1');
 
+const {
+  applyImageAccessibility,
+  decodeAltText,
+  encodeAltText,
+  promptForAltText,
+} = require('./accessibility');
+
 // Optional helper (shared with ep_docx_html_customizer) that provides a CORS fetch with
 // automatic same-origin proxy fallback.  If the plugin is not present we simply fall back
 // to the native fetch logic.
@@ -222,6 +229,9 @@ exports.aceAttribsToClasses = function(name, context) {
   // ADDED for persistent image ID
   if (context.key === 'image-id' && context.value) {
     return ['image-id-' + context.value];
+  }
+  if (context.key === 'image-alt') {
+    return ['image-alt-' + encodeAltText(context.value || '')];
   }
   return [];
 };
@@ -464,6 +474,8 @@ exports.postAceInit = function (hook, context) {
         // Update button active states
         $formatMenuRef.find('.image-format-button[data-wrap]').removeClass('active');
         $formatMenuRef.find(`.image-format-button[data-wrap="${currentFloat}"]`).addClass('active');
+        $formatMenuRef.find('.image-format-button[data-wrap]').attr('aria-pressed', 'false');
+        $formatMenuRef.find(`.image-format-button[data-wrap="${currentFloat}"]`).attr('aria-pressed', 'true');
     };
 
     $inner.on('mousedown', '.inline-image.image-placeholder', function(evt) {
@@ -899,11 +911,12 @@ exports.postAceInit = function (hook, context) {
 
                     // Global cache to avoid re-uploading the same blob within a pad session
                     window.epImageInsertUploadCache = window.epImageInsertUploadCache || {};
+                    const pastedAltText = promptForAltText(file.name || 'pasted image');
 
                     // Helper to actually insert an <img> (via ace_doInsertImage)
                     const insertIntoPad = (src, widthPx = null, heightPx = null) => {
                         _aceContext.callWithAce((ace) => {
-                            ace.ace_doInsertImage(src, widthPx, heightPx);
+                            ace.ace_doInsertImage(src, widthPx, heightPx, pastedAltText);
                         }, 'pasteImage', true);
                     };
 
@@ -1298,6 +1311,8 @@ exports.postAceInit = function (hook, context) {
             // Handle wrap type buttons
             $formatMenuRef.find('.image-format-button[data-wrap]').removeClass('active');
             $button.addClass('active');
+            $formatMenuRef.find('.image-format-button[data-wrap]').attr('aria-pressed', 'false');
+            $button.attr('aria-pressed', 'true');
             
             // Use the specific selected image element (like resize logic does)
             // Check both the local reference and the global current reference (for DOM regeneration)
@@ -1406,6 +1421,34 @@ exports.postAceInit = function (hook, context) {
                 }
                 
                 hideFormatMenu();
+            } else if (action === 'alt') {
+                const outerSpan = currentElement;
+                let currentAlt = '';
+                for (const cls of outerSpan.className.split(/\s+/)) {
+                    if (cls.startsWith('image-alt-')) {
+                        currentAlt = decodeAltText(cls.substring('image-alt-'.length));
+                        break;
+                    }
+                }
+                const nextAlt = window.prompt('Describe this image. Leave blank if it is decorative.', currentAlt);
+                if (nextAlt == null) return;
+                _aceContext.callWithAce((ace) => {
+                    const placeholderRange = getPlaceholderRangeFromOuterSpan(outerSpan, ace, {wholePlaceholder: true});
+                    if (!placeholderRange) {
+                        console.error('[ep_images_extended alt] Could not locate placeholder range for alt text.');
+                        return;
+                    }
+                    if (!validateAceOperation(ace, 'applyAttributes', placeholderRange[0], placeholderRange[1], 'alt text')) {
+                        return;
+                    }
+                    try {
+                        ace.ace_performDocumentApplyAttributesToRange(placeholderRange[0], placeholderRange[1], [
+                            ['image-alt', nextAlt.trim()]
+                        ]);
+                    } catch (err) {
+                        console.error('[ep_images_extended alt] Error applying alt text:', err);
+                    }
+                }, 'applyImageAltText', true);
             }
         }
     });
@@ -1470,14 +1513,6 @@ exports.acePostWriteDomLineHTML = (hookName, context) => {
     const innerSpan = outerSpan.querySelector('span.image-inner');
     if (!innerSpan) return;
 
-    // Ensure both outer and inner spans are non-editable so cursor keys cannot land inside
-    if (!innerSpan.hasAttribute('contenteditable')) {
-      innerSpan.setAttribute('contenteditable', 'false');
-    }
-    if (!outerSpan.hasAttribute('contenteditable')) {
-      outerSpan.setAttribute('contenteditable', 'false');
-    }
-
     let escapedSrc = null;
     let imageWidth = null;
     let imageCssAspectRatioVal = null;
@@ -1510,6 +1545,7 @@ exports.acePostWriteDomLineHTML = (hookName, context) => {
             outerSpan.removeAttribute('data-image-id');
         }
     }
+    applyImageAccessibility(outerSpan);
     
     const currentDataImageId = outerSpan.getAttribute('data-image-id');
 
@@ -1700,7 +1736,7 @@ exports.aceKeyEvent = (hookName, context, cb) => {
   return cb(false);
 };
 
-const doInsertImage = function (src, widthPx, heightPx) {
+const doInsertImage = function (src, widthPx, heightPx, altText = '') {
   const ZWSP = '\u200B';
   const PLACEHOLDER = '\u200B';
   const editorInfo = this.editorInfo;
@@ -1741,6 +1777,7 @@ const doInsertImage = function (src, widthPx, heightPx) {
   // NEW: Add image-id attribute
   const imageId = generateUUID();
   attributesToSet.push(['image-id', imageId]);
+  attributesToSet.push(['image-alt', altText || '']);
 
   // Apply the image attributes
   docMan.setAttributesOnRange(imageAttrStart, imageAttrEnd, attributesToSet);
@@ -1837,8 +1874,7 @@ function _applyImageStylesForElement(outerSpan) {
   }
 
   if (imageId) outerSpan.setAttribute('data-image-id', imageId);
-  outerSpan.setAttribute('contenteditable', 'false');
-  innerSpan.setAttribute('contenteditable', 'false');
+  applyImageAccessibility(outerSpan);
 
   // Set CSS custom properties / inline styles exactly like acePostWriteDomLineHTML.
   if (escSrc) {

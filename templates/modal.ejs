@@ -1,12 +1,12 @@
-<div id="imageUploadModalError" class="popup">
+<div id="imageUploadModalError" class="popup" role="alertdialog" aria-modal="true" aria-labelledby="imageUploadModalErrorTitle">
   <div class="popup-content">
-    <h2 class="error"></h2>
+    <h2 id="imageUploadModalErrorTitle" class="error"></h2>
     <br>
     <button id="closeErrorModalButton">Close</button>
   </div>
 </div>
 
-<div id="imageUploadModalLoader" class="popup">
+<div id="imageUploadModalLoader" class="popup" role="status" aria-live="polite" aria-label="Uploading image">
   <div class="popup-content">
     <p class="loadingAnimation"></p>
   </div>

@@ -1,5 +1,7 @@
 'use strict';
 // Modified from ep_image_insert 1.0.7 
+const {promptForAltText} = require('./accessibility');
+
 const _isValid = (file) => {
   const mimedb = clientVars.ep_images_extended.mimeTypes;
   const mimeType = mimedb[file.type];
@@ -70,8 +72,8 @@ exports.postToolbarInit = (hook, context) => {
   toolbar.registerCommand('imageUpload', () => {
     $(document).find('body').find('#imageInput').remove();
     const fileInputHtml = `<input
-    style="width:1px;height:1px;z-index:-10000;"
-    id="imageInput" type="file" />`;
+    style="position:absolute;width:1px;height:1px;opacity:0;z-index:-10000;"
+    id="imageInput" type="file" aria-label="Choose image to upload" />`;
     $(document).find('body').append(fileInputHtml);
 
     $(document).find('body').find('#imageInput').on('change', (e) => {
@@ -81,6 +83,7 @@ exports.postToolbarInit = (hook, context) => {
         return;
       }
       const file = files[0];
+      const altText = promptForAltText(file.name);
 
       if (!_isValid(file)) {
         return; // Validation errors are handled by _isValid
@@ -94,16 +97,16 @@ exports.postToolbarInit = (hook, context) => {
           const data = reader.result;
           const img = new Image();
           img.onload = () => {
-            const widthPx = `${img.naturalWidth}px`;
-            const heightPx = `${img.naturalHeight}px`;
-            context.ace.callWithAce((ace) => {
-              ace.ace_doInsertImage(data, widthPx, heightPx);
+              const widthPx = `${img.naturalWidth}px`;
+              const heightPx = `${img.naturalHeight}px`;
+              context.ace.callWithAce((ace) => {
+              ace.ace_doInsertImage(data, widthPx, heightPx, altText);
             }, 'imgBase64', true);
           };
           img.onerror = () => {
              console.error('[ep_images_extended toolbar] Failed to load Base64 image data to get dimensions. Inserting without dimensions.');
              context.ace.callWithAce((ace) => {
-               ace.ace_doInsertImage(data);
+               ace.ace_doInsertImage(data, null, null, altText);
             }, 'imgBase64Error', true);
           };
           img.src = data;
@@ -147,13 +150,13 @@ exports.postToolbarInit = (hook, context) => {
               const widthPx = `${img.naturalWidth}px`;
               const heightPx = `${img.naturalHeight}px`;
               context.ace.callWithAce((ace) => {
-                ace.ace_doInsertImage(publicUrl, widthPx, heightPx);
+                ace.ace_doInsertImage(publicUrl, widthPx, heightPx, altText);
               }, 'imgUploadS3', true);
             };
             img.onerror = () => {
               console.warn('[ep_images_extended toolbar] Could not load uploaded S3 image to measure size. Inserting without dimensions.');
               context.ace.callWithAce((ace) => {
-                ace.ace_doInsertImage(publicUrl);
+                ace.ace_doInsertImage(publicUrl, null, null, altText);
               }, 'imgUploadS3Error', true);
             };
             img.src = publicUrl;
@@ -189,12 +192,12 @@ exports.postToolbarInit = (hook, context) => {
               const widthPx = `${img.naturalWidth}px`;
               const heightPx = `${img.naturalHeight}px`;
               context.ace.callWithAce((ace) => {
-                ace.ace_doInsertImage(publicUrl, widthPx, heightPx);
+                ace.ace_doInsertImage(publicUrl, widthPx, heightPx, altText);
               }, 'imgUploadLocal', true);
             };
             img.onerror = () => {
               context.ace.callWithAce((ace) => {
-                ace.ace_doInsertImage(publicUrl);
+                ace.ace_doInsertImage(publicUrl, null, null, altText);
               }, 'imgUploadLocalError', true);
             };
             img.src = publicUrl;

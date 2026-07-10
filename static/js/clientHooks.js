@@ -1827,13 +1827,18 @@ function _applyImageStylesForElement(outerSpan) {
   if (!innerSpan) return;
 
   // Recover attribute values from the CSS-classes that ACE placed on the span.
-  let escSrc = null, width = null, aspect = null, floatVal = null;
+  let escSrc = null, width = null, aspect = null, floatVal = null, imageId = null;
   for (const cls of outerSpan.className.split(' ')) {
     if (cls.startsWith('image:')) escSrc = cls.slice(6);
     if (cls.startsWith('image-width:')) width = cls.slice(12);
     if (cls.startsWith('imageCssAspectRatio:')) aspect = cls.slice(20);
     if (cls.startsWith('image-float:')) floatVal = cls.slice(12);
+    if (cls.startsWith('image-id-')) imageId = cls.slice(9);
   }
+
+  if (imageId) outerSpan.setAttribute('data-image-id', imageId);
+  outerSpan.setAttribute('contenteditable', 'false');
+  innerSpan.setAttribute('contenteditable', 'false');
 
   // Set CSS custom properties / inline styles exactly like acePostWriteDomLineHTML.
   if (escSrc) {
@@ -1843,7 +1848,8 @@ function _applyImageStylesForElement(outerSpan) {
     } catch (_) { /* ignore */ }
   }
   if (width) innerSpan.style.width = width;
-  if (aspect) innerSpan.style.setProperty('--image-css-aspect-ratio', aspect);
+  innerSpan.style.setProperty('--image-css-aspect-ratio', aspect || '1');
+  innerSpan.style.removeProperty('height');
 
   // Float behaviour (left / right / inline)
   outerSpan.classList.remove('image-float-left', 'image-float-right', 'image-float-none');
@@ -1862,8 +1868,9 @@ function _applyImageStylesForElement(outerSpan) {
 exports.postTimesliderInit = () => {
   // Helper that (re)applies styles to every image currently in the DOM.
   const renderAllImages = () => {
-    const $placeholders = $('#innerdocbody').find('span.inline-image.image-placeholder');
-    $placeholders.each((_idx, el) => _applyImageStylesForElement(el));
+    const root = document.getElementById('innerdocbody') || document;
+    const placeholders = root.querySelectorAll('span.inline-image.image-placeholder');
+    placeholders.forEach((el) => _applyImageStylesForElement(el));
   };
 
   // Initial render for the first revision shown.
@@ -1875,5 +1882,21 @@ exports.postTimesliderInit = () => {
       // Allow the DOM update from broadcast.js to finish first.
       setTimeout(renderAllImages, 0);
     });
+  }
+
+  const target = document.getElementById('innerdocbody');
+  if (target && !target.__epImagesExtendedTimesliderObserver) {
+    let scheduled = false;
+    const scheduleRender = () => {
+      if (scheduled) return;
+      scheduled = true;
+      setTimeout(() => {
+        scheduled = false;
+        renderAllImages();
+      }, 0);
+    };
+    const observer = new MutationObserver(scheduleRender);
+    observer.observe(target, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
+    target.__epImagesExtendedTimesliderObserver = observer;
   }
 };

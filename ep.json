@@ -15,6 +15,7 @@
         "aceAttribClasses": "ep_images_extended/static/js/clientHooks",
         "aceEditorCSS": "ep_images_extended/static/js/clientHooks",
         "acePostWriteDomLineHTML": "ep_images_extended/static/js/clientHooks",
+        "postTimesliderInit": "ep_images_extended/static/js/clientHooks",
         "collectContentPre": "ep_images_extended/static/js/contentCollection",
         "collectContentPost": "ep_images_extended/static/js/clientHooks",
         "aceKeyEvent": "ep_images_extended/static/js/clientHooks"

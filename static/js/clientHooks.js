@@ -1462,7 +1462,7 @@ exports.aceCreateDomLine = (hookName, args, cb) => {
 const Changeset = require('ep_etherpad-lite/static/js/Changeset');
 exports.acePostWriteDomLineHTML = (hookName, context) => {
   const lineNode = context.node; 
-  if (!lineNode) return;
+  if (!lineNode || typeof lineNode.querySelectorAll !== 'function') return;
 
   const placeholders = lineNode.querySelectorAll('span.image-placeholder');
   placeholders.forEach((placeholder, index) => { 

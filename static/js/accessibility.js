@@ -51,17 +51,9 @@ const applyImageAccessibility = (outerSpan) => {
   }
 };
 
-const promptForAltText = (fileName = '') => {
-  if (typeof window === 'undefined' || typeof window.prompt !== 'function') return '';
-  const hint = fileName ? ` for ${fileName}` : '';
-  const value = window.prompt(`Describe this image${hint}. Leave blank if it is decorative.`, '');
-  return value == null ? '' : value.trim();
-};
-
 module.exports = {
   applyImageAccessibility,
   decodeAltText,
   encodeAltText,
   getAltTextFromClasses,
-  promptForAltText,
 };

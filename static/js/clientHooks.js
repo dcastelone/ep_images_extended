@@ -7,7 +7,6 @@ const {
   applyImageAccessibility,
   decodeAltText,
   encodeAltText,
-  promptForAltText,
 } = require('./accessibility');
 
 // Optional helper (shared with ep_docx_html_customizer) that provides a CORS fetch with
@@ -911,12 +910,11 @@ exports.postAceInit = function (hook, context) {
 
                     // Global cache to avoid re-uploading the same blob within a pad session
                     window.epImageInsertUploadCache = window.epImageInsertUploadCache || {};
-                    const pastedAltText = promptForAltText(file.name || 'pasted image');
 
                     // Helper to actually insert an <img> (via ace_doInsertImage)
                     const insertIntoPad = (src, widthPx = null, heightPx = null) => {
                         _aceContext.callWithAce((ace) => {
-                            ace.ace_doInsertImage(src, widthPx, heightPx, pastedAltText);
+                            ace.ace_doInsertImage(src, widthPx, heightPx, '');
                         }, 'pasteImage', true);
                     };
 

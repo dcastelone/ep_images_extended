@@ -1,6 +1,5 @@
 'use strict';
 // Modified from ep_image_insert 1.0.7 
-const {promptForAltText} = require('./accessibility');
 
 const _isValid = (file) => {
   const mimedb = clientVars.ep_images_extended.mimeTypes;
@@ -83,7 +82,7 @@ exports.postToolbarInit = (hook, context) => {
         return;
       }
       const file = files[0];
-      const altText = promptForAltText(file.name);
+      const altText = '';
 
       if (!_isValid(file)) {
         return; // Validation errors are handled by _isValid

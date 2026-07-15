@@ -17,12 +17,12 @@ const collectContentPre = (hook, context) => {
           escapedSrc = cls.substring(6);
       } else if (cls.startsWith('image-width:')) {
           const potentialWidth = cls.substring(12);
-          if (potentialWidth && (potentialWidth === 'auto' || /[0-9]+(%|px|em|rem|vw|vh)?$/.test(potentialWidth) || /^[0-9.]+$/.test(potentialWidth))) {
+          if (potentialWidth && (potentialWidth === 'auto' || /^[0-9]+(%|px|em|rem|vw|vh)?$/.test(potentialWidth) || /^[0-9.]+$/.test(potentialWidth))) {
              widthValue = potentialWidth;
           }
       } else if (cls.startsWith('image-height:')) {
           const potentialHeight = cls.substring(13);
-          if (potentialHeight && (potentialHeight === 'auto' || /[0-9]+(%|px|em|rem|vw|vh)?$/.test(potentialHeight) || /^[0-9.]+$/.test(potentialHeight))) {
+          if (potentialHeight && (potentialHeight === 'auto' || /^[0-9]+(%|px|em|rem|vw|vh)?$/.test(potentialHeight) || /^[0-9.]+$/.test(potentialHeight))) {
              heightValue = potentialHeight;
           }
       } else if (cls.startsWith('imageCssAspectRatio:')) {
@@ -96,12 +96,7 @@ const collectContentPre = (hook, context) => {
   }
 };
 
-// This hook is called **after** the text of a line/segment is processed.
-// We don't need special post-processing for this attribute approach.
-const collectContentPost = (hook, context) => {};
-
 // Remove collectContentImage as it's not suitable for non-<img> elements
 // const collectContentImage = ... (Removed)
 
 exports.collectContentPre = collectContentPre;
-exports.collectContentPost = collectContentPost;

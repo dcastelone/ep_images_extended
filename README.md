@@ -79,6 +79,12 @@ Create (or merge) an **`ep_images_extended`** block at the root of `settings.jso
 
 ---
 
+## Export support
+
+This plugin does not register Etherpad export hooks. Image attributes remain available to Etherpad's normal content collection and timeslider rendering, but special HTML/DOCX export rendering is currently outside this plugin's supported surface. The old partial export implementation was removed because it could interfere with unrelated exports.
+
+---
+
 ## Contributing
 
 This was mostly made by LLMs (my requirements in this project were far beyond my coding ability at this time). Bug reports & PRs are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the coding guidelines and branching model.

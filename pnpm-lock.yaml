@@ -15,8 +15,8 @@ importers:
         specifier: 3.1087.0
         version: 3.1087.0
       mime-db:
-        specifier: 1.49.0
-        version: 1.49.0
+        specifier: 1.54.0
+        version: 1.54.0
     devDependencies:
       socket:
         specifier: 1.1.143
@@ -182,8 +182,8 @@ packages:
   bowser@2.14.1:
     resolution: {integrity: sha512-tzPjzCxygAKWFOJP011oxFHs57HzIhOEracIgAePE4pqB3LikALKnSzUyU4MGs9/iCEUuHlAJTjTc5M+u7YEGg==}
 
-  mime-db@1.49.0:
-    resolution: {integrity: sha512-CIc8j9URtOVApSFCQIF+VBkX1RwXp/oMMOrqdyXSBXq5RWNEsRfyj1kiRnQgmNXmHxPoFIxOroKA3zcU9P+nAA==}
+  mime-db@1.54.0:
+    resolution: {integrity: sha512-aU5EJuIN2WDemCcAp2vFBfp/m4EAhWJnUNSSw0ixs7/kXbd6Pg64EmwJkNdFhB8aWt1sH2CTXrLxo/iAGV3oPQ==}
     engines: {node: '>= 0.6'}
 
   socket@1.1.143:
@@ -453,7 +453,7 @@ snapshots:
 
   bowser@2.14.1: {}
 
-  mime-db@1.49.0: {}
+  mime-db@1.54.0: {}
 
   socket@1.1.143:
     dependencies:

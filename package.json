@@ -9,7 +9,7 @@
   },
   "contributors": [],
   "dependencies": {
-    "mime-db": "1.49.0",
+    "mime-db": "1.54.0",
     "@aws-sdk/client-s3": "3.1087.0",
     "@aws-sdk/s3-request-presigner": "3.1087.0"
   },

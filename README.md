@@ -23,6 +23,11 @@ pnpm run plugins i ep_images_extended
 
 Restart Etherpad after installation. This release supports Etherpad 3.3.2 and later 3.x releases.
 
+When `ep_font_size` is also installed, Etherpad loads its inline renderer before
+this plugin so images retain their rendering classes inside font-sized text.
+This is optional plugin-ordering metadata; `ep_font_size` is not installed or
+required by `ep_images_extended`.
+
 ## Configuration
 
 Add an `ep_images_extended` object to `settings.json`.

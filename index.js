@@ -14,6 +14,7 @@ const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
 const mimetypes = require('mime-db');
+const {buildClientSettings} = require('./lib/clientSettings');
 // AWS SDK v3 for presigned URLs
 let S3Client, PutObjectCommand, getSignedUrl;
 try {
@@ -64,25 +65,7 @@ const _rateLimitCheck = (ip) => {
  * @see {@link http://etherpad.org/doc/v1.5.7/#index_clientvars}
  */
 exports.clientVars = (hookName, args, cb) => {
-  const pluginSettings = {
-    storageType: 'local',
-  };
-  if (!settings.ep_images_extended) {
-    settings.ep_images_extended = {};
-  }
-  const keys = Object.keys(settings.ep_images_extended);
-  keys.forEach((key) => {
-    if (key !== 'storage') {
-      pluginSettings[key] = settings.ep_images_extended[key];
-    }
-  });
-  if (settings.ep_images_extended.storage)
-  {
-    pluginSettings.storageType = settings.ep_images_extended.storage.type;
-  }
-
-  pluginSettings.mimeTypes = mimetypes;
-
+  const pluginSettings = buildClientSettings(settings.ep_images_extended || {}, mimetypes);
   return cb({ep_images_extended: pluginSettings});
 };
 

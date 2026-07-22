@@ -8,6 +8,7 @@ const {
   decodeAltText,
   encodeAltText,
 } = require('./accessibility');
+const {rewriteImageSource} = require('./imageSource');
 
 // Optional helper (shared with ep_docx_html_customizer) that provides a CORS fetch with
 // automatic same-origin proxy fallback.  If the plugin is not present we simply fall back
@@ -1563,7 +1564,8 @@ exports.acePostWriteDomLineHTML = (hookName, context) => {
       try {
         const src = decodeURIComponent(escapedSrc);
         if (src && (src.startsWith('data:') || src.startsWith('http') || src.startsWith('/'))) {
-          innerSpan.style.setProperty('--image-src', `url("${src}")`);
+          const renderedSrc = rewriteImageSource(src, clientVars.ep_images_extended?.delivery);
+          innerSpan.style.setProperty('--image-src', `url("${renderedSrc}")`);
         } // else { /* Invalid unescaped src warning removed */ }
       } catch (e) {
         console.error(`[ep_images_extended acePostWriteDomLineHTML] Error setting CSS var for placeholder #${index}:`, e);
@@ -1878,7 +1880,8 @@ function _applyImageStylesForElement(outerSpan) {
   if (escSrc) {
     try {
       const decoded = decodeURIComponent(escSrc);
-      innerSpan.style.setProperty('--image-src', `url("${decoded}")`);
+      const renderedSrc = rewriteImageSource(decoded, clientVars.ep_images_extended?.delivery);
+      innerSpan.style.setProperty('--image-src', `url("${renderedSrc}")`);
     } catch (_) { /* ignore */ }
   }
   if (width) innerSpan.style.width = width;

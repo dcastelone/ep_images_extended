@@ -25,6 +25,7 @@ Create (or merge) an **`ep_images_extended`** block at the root of `settings.jso
 | `fileTypes` | Array&lt;string&gt; | _none_ | List of **extensions** (no dot) that are allowed to upload.  If omitted any MIME that starts with `image/` is accepted. |
 | `maxFileSize` | Number (bytes) | _unlimited_ | Reject files larger than this size. |
 | `storage` | Object | `{ "type": "base64" }` | Where the image binary ends up.  See below. |
+| `delivery` | Object | `{ "mode": "public" }` | Optional viewer-delivery behavior. `signed_cookie` keeps canonical attributes unchanged while rendering explicitly listed legacy CDN URLs through `storage.publicURL`. |
 
 ### Storage strategies
 
@@ -76,6 +77,40 @@ Create (or merge) an **`ep_images_extended`** block at the root of `settings.jso
    The browser POSTs the file to `/pluginfw/ep_images_extended/upload`.
    Etherpad writes it to `baseFolder/<padId>/<uuid>.ext` and returns the
    public URL.
+
+### Private CloudFront delivery
+
+Signed-cookie delivery is opt-in and does not place signing keys in Etherpad:
+
+```jsonc
+"ep_images_extended": {
+  "storage": {
+    "type": "s3_presigned",
+    "region": "us-east-1",
+    "bucket": "my-private-images",
+    "publicURL": "https://files.example.org/images/",
+    "expires": 900
+  },
+  "delivery": {
+    "mode": "signed_cookie",
+    "legacyBaseURLs": [
+      "https://d111111abcdef8.cloudfront.net/"
+    ]
+  }
+}
+```
+
+The authenticated parent application must set valid CloudFront cookies before
+the editor loads. The plugin never receives or exposes the CloudFront private
+key. New uploads store the stable branded URL. At render time, image attributes
+whose URL starts with an explicitly listed legacy base are mapped to the same
+object path below `storage.publicURL`; the canonical Etherpad attribute and its
+revision history are not rewritten. Data URLs, relative URLs, already-branded
+URLs, and unrelated external image hosts are unchanged.
+
+`legacyBaseURLs` may also be a comma-separated string for environment-driven
+Etherpad settings. `signed_cookie` mode refuses to initialize without a valid
+HTTP(S) branded base URL.
 
 ---
 

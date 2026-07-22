@@ -1,132 +1,120 @@
-# ep_images_extended – Extended image plugin for etherpad
+# ep_images_extended
 
-**Insert, resize, float, copy, cut & delete images.**  
-`ep_images_extended` builds on `ep_image_insert` and other image upload plugins.  
-The main difference is that images are built as custom span structures using the CSS background image attribute. This bypasses the Content Collector which always requires images to be block-level styles (so they couldn't share the line with text). As a result, we can now type around images, which allows the creation of more interactive pad content. The plugin includes some other features like click + drag resize, image float, and cut/copy/delete through a context menu. It was designed for compatibility with my forthcoming tables plugin. It's a pretty heavyweight plugin (some would say overengineered), because I was prioritizing meeting functional requirements for my project. Etherpad wizards might have tips for optimization, it would surely be appreciated.
+Inline image editing for Etherpad with embedded, local, or direct-to-S3 storage. Images can share a line with text and can be resized, floated, copied, cut, or removed through an accessible formatting interface.
 
-![Demo](https://i.imgur.com/qGOBRep.png)
+![Inline image editing in Etherpad](https://i.imgur.com/qGOBRep.png)
+
+## Features
+
+- Inline images alongside ordinary Etherpad text
+- Drag resizing and left, right, or inline placement
+- Keyboard-accessible image formatting and optional alt text
+- Base64, local-disk, and S3 presigned-upload storage
+- Private CloudFront delivery through parent-issued signed cookies
+- Timeslider rendering without rewriting historical image attributes
 
 ## Installation
 
-Install via the plugins menu or through:
+From the Etherpad directory:
 
+```sh
 pnpm run plugins i ep_images_extended
+```
 
-in your etherpad-lite directory.
+Restart Etherpad after installation. This release supports Etherpad 3.3.2 and later 3.x releases.
 
----
+## Configuration
 
-## Configuration (settings.json)
+Add an `ep_images_extended` object to `settings.json`.
 
-Create (or merge) an **`ep_images_extended`** block at the root of `settings.json`.
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fileTypes` | string array | Any `image/*` MIME type | Allowed filename extensions without dots |
+| `maxFileSize` | number | Storage-dependent | Maximum upload size in bytes |
+| `storage` | object | `{ "type": "base64" }` | Image storage strategy |
+| `delivery` | object | `{ "mode": "public" }` | Viewer delivery behavior |
 
-| key | type | default | description |
-|-----|------|---------|-------------|
-| `fileTypes` | Array&lt;string&gt; | _none_ | List of **extensions** (no dot) that are allowed to upload.  If omitted any MIME that starts with `image/` is accepted. |
-| `maxFileSize` | Number (bytes) | _unlimited_ | Reject files larger than this size. |
-| `storage` | Object | `{ "type": "base64" }` | Where the image binary ends up.  See below. |
-| `delivery` | Object | `{ "mode": "public" }` | Optional viewer-delivery behavior. `signed_cookie` keeps canonical attributes unchanged while rendering explicitly listed legacy CDN URLs through `storage.publicURL`. |
+### Embedded base64
 
-### Storage strategies
-
-1. **Embedded Base-64** (default – zero config)
-   ```jsonc
-      "ep_images_extended": {
-        "storage": {               
-          "type": "base64" 
-        },
-        "fileTypes": ["jpeg", "jpg", "png", "gif", "bmp", "webp"],
-        "maxFileSize": 5000000
-      }
-   ```
-   Images are converted to data-URIs and live inside the pad. This has a pretty big performance impact.
-
-2. **Amazon S3 with presigned uploads**
-   ```jsonc
-   "ep_images_extended": {
-     "storage": {
-       "type":   "s3_presigned",
-       "region": "us-east-1",
-       "bucket": "my-etherpad-images",
-       "publicURL": "https://cdn.example.com/",    // optional – defaults to the S3 URL
-       "expires": 900                               // optional – seconds (default 600)
-     },
-     "fileTypes": ["png", "jpg", "webp"],
-     "maxFileSize": 10485760
-   }
-   ```
-   The browser asks the Etherpad server for a presigned **PUT** URL, then uploads straight to S3 –
-   the file never touches your app server. Access keys are **not** read from `settings.json`.*  The AWS SDK picks them up from environment variables.
-   
-   * `AWS_ACCESS_KEY_ID`
-   * `AWS_SECRET_ACCESS_KEY`
-   * `AWS_SESSION_TOKEN` (if using temporary credentials)
-   
-3. **Local disk storage** (files saved on the Etherpad server)
-   ```jsonc
-   "ep_images_extended": {
-     "storage": {
-       "type": "local",                 // enable disk uploads
-       "baseFolder": "static/images",   // optional – path relative to Etherpad root
-       "baseURL": "https://pad.example.com/etherpad-lite/static/images/" // optional – public URL prefix
-     },
-     "fileTypes": ["jpeg", "jpg", "png", "gif"],
-     "maxFileSize": 5000000
-   }
-   ```
-   The browser POSTs the file to `/pluginfw/ep_images_extended/upload`.
-   Etherpad writes it to `baseFolder/<padId>/<uuid>.ext` and returns the
-   public URL.
-
-### Private CloudFront delivery
-
-Signed-cookie delivery is opt-in and does not place signing keys in Etherpad:
-
-```jsonc
-"ep_images_extended": {
-  "storage": {
-    "type": "s3_presigned",
-    "region": "us-east-1",
-    "bucket": "my-private-images",
-    "publicURL": "https://files.example.org/images/",
-    "expires": 900
-  },
-  "delivery": {
-    "mode": "signed_cookie",
-    "legacyBaseURLs": [
-      "https://d111111abcdef8.cloudfront.net/"
-    ]
+```json
+{
+  "ep_images_extended": {
+    "storage": {"type": "base64"},
+    "fileTypes": ["jpeg", "jpg", "png", "gif", "webp"],
+    "maxFileSize": 5000000
   }
 }
 ```
 
-The authenticated parent application must set valid CloudFront cookies before
-the editor loads. The plugin never receives or exposes the CloudFront private
-key. New uploads store the stable branded URL. At render time, image attributes
-whose URL starts with an explicitly listed legacy base are mapped to the same
-object path below `storage.publicURL`; the canonical Etherpad attribute and its
-revision history are not rewritten. Data URLs, relative URLs, already-branded
-URLs, and unrelated external image hosts are unchanged.
+Base64 images are stored in the pad. This is convenient for small deployments but increases pad and revision size.
 
-`legacyBaseURLs` may also be a comma-separated string for environment-driven
-Etherpad settings. `signed_cookie` mode refuses to initialize without a valid
-HTTP(S) branded base URL.
+### S3 presigned uploads
 
----
+```json
+{
+  "ep_images_extended": {
+    "storage": {
+      "type": "s3_presigned",
+      "region": "us-east-1",
+      "bucket": "example-images",
+      "publicURL": "https://files.example.org/images/",
+      "expires": 900
+    },
+    "fileTypes": ["png", "jpg", "jpeg", "webp"],
+    "maxFileSize": 10485760
+  }
+}
+```
+
+The browser uploads directly to S3 with a short-lived PUT URL. The AWS SDK uses its normal credential provider chain; on AWS, prefer a task role over long-lived access keys. Configure bucket CORS to permit PUT requests from the Etherpad origin.
+
+### Local disk
+
+```json
+{
+  "ep_images_extended": {
+    "storage": {
+      "type": "local",
+      "baseFolder": "static/images",
+      "baseURL": "https://pads.example.org/static/images/"
+    }
+  }
+}
+```
+
+Local storage must be persistent and shared appropriately for multi-instance Etherpad deployments.
+
+## Private CloudFront delivery
+
+```json
+{
+  "ep_images_extended": {
+    "storage": {
+      "type": "s3_presigned",
+      "region": "us-east-1",
+      "bucket": "example-private-images",
+      "publicURL": "https://files.example.org/images/",
+      "expires": 900
+    },
+    "delivery": {
+      "mode": "signed_cookie",
+      "legacyBaseURLs": ["https://legacy.example.cloudfront.net/"]
+    }
+  }
+}
+```
+
+The authenticated parent application must issue valid CloudFront cookies before Etherpad loads. This plugin never receives the CloudFront private key. New images retain stable branded URLs. Explicitly allowlisted legacy URLs are mapped to the branded base only while rendering; stored pad attributes and revision history remain unchanged.
 
 ## Export support
 
-This plugin does not register Etherpad export hooks. Image attributes remain available to Etherpad's normal content collection and timeslider rendering, but special HTML/DOCX export rendering is currently outside this plugin's supported surface. The old partial export implementation was removed because it could interfere with unrelated exports.
+This plugin does not register specialized export hooks. Image attributes remain available to normal content collection and the timeslider, but HTML or document-export rendering is outside the supported surface.
 
----
+## Development
 
-## Contributing
+```sh
+pnpm install --frozen-lockfile
+pnpm test
+```
 
-This was mostly made by LLMs (my requirements in this project were far beyond my coding ability at this time). Bug reports & PRs are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the coding guidelines and branching model.
-
----
-
-## Credits / Upstream
-This plugin started as a heavy rewrite of
-[ep_image_insert](https://github.com/mamylinx/ep_image_insert)
-by Mamy Linx, John McLear, Ilmar Türk and other contributors.
+The plugin began as a substantial rewrite of `ep_image_insert`. See `NOTICE.md` for attribution and `LICENSE.md` for the Apache License 2.0 terms.

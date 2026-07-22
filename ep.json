@@ -4,6 +4,7 @@
       "name": "main",
       "pre": [
         "ep_font_color/main",
+        "ep_font_colors_rgb/main",
         "ep_hyperlinked_text/main"
       ],
       "client_hooks": {
